@@ -1,0 +1,8 @@
+{
+  "expo": {
+    "name": "Social Live Shop 360", "slug": "social-live-shop-360", "version": "0.1.0", "orientation": "portrait", "userInterfaceStyle": "dark",
+    "splash": {"backgroundColor": "#101018"},
+    "ios": {"supportsTablet": true, "bundleIdentifier": "com.socialliveshop360.app"},
+    "android": {"package": "com.socialliveshop360.app", "adaptiveIcon": {"backgroundColor": "#101018"}}
+  }
+}
