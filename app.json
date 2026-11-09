@@ -23,7 +23,10 @@
       },
       "permissions": [
         "CAMERA",
-        "RECORD_AUDIO"
+        "RECORD_AUDIO",
+        "INTERNET",
+        "MODIFY_AUDIO_SETTINGS",
+        "ACCESS_NETWORK_STATE"
       ]
     },
     "plugins": [
@@ -33,7 +36,9 @@
           "cameraPermission": "Permitir que KD.LIVE use la cámara.",
           "microphonePermission": "Permitir que KD.LIVE use el micrófono."
         }
-      ]
+      ],
+      "@livekit/react-native-expo-plugin",
+      "@config-plugins/react-native-webrtc"
     ]
   }
 }
