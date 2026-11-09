@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView, View, Text, TouchableOpacity, ScrollView, TextInput, StatusBar } from 'react-native';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { styles } from './src/styles';
-import { supabaseConfigured } from './src/supabase';
+import { supabase, supabaseConfigured } from './src/supabase';
+import AuthScreen from './src/AuthScreen';
 import { registerGlobals } from '@livekit/react-native';
 import LiveSession from './src/LiveSession';
 
@@ -19,12 +20,29 @@ const products = [
 ];
 
 export default function App() {
+  const [session, setSession] = useState(null);
   const [tab, setTab] = useState('Inicio');
   const [query, setQuery] = useState('');
   const [selectedLive, setSelectedLive] = useState(null);
   const [notice, setNotice] = useState('');
   const [liveSession, setLiveSession] = useState(null);
   const visibleProducts = products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()));
+
+  useEffect(() => {
+    if (!supabaseConfigured || !supabase) return undefined;
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  async function signOut() {
+    if (supabase) await supabase.auth.signOut();
+    setSession(null);
+  }
+
+  if (supabaseConfigured && !session) {
+    return <AuthScreen onAuthenticated={setSession} />;
+  }
 
   function startCameraLive() {
     setNotice('El inicio de LIVE se habilitará cuando conectemos tu cuenta y creemos una sala autorizada. Así evitamos transmisiones falsas o accesos inseguros.');
@@ -42,7 +60,7 @@ export default function App() {
       <View style={styles.header}>
         <View style={styles.brandMark}><Text style={styles.brandMarkText}>KD</Text></View>
         <Text style={styles.brand}>KD.<Text style={styles.brandBold}>LIVE</Text></Text>
-        <TouchableOpacity onPress={() => comingSoon('Perfil')} style={styles.avatar}><Text>👤</Text></TouchableOpacity>
+        <TouchableOpacity onPress={signOut} style={styles.avatar}><Text>↪</Text></TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.eyebrow}>COMPRÁ · VENDÉ · CONECTÁ</Text>
@@ -85,7 +103,7 @@ export default function App() {
       </ScrollView>
       <View style={styles.bottom}>
         {['Inicio', 'En vivo', '＋', 'Tienda', 'Perfil'].map(item => (
-          <TouchableOpacity key={item} onPress={() => item === '＋' ? comingSoon('Crear publicación') : item === 'Perfil' ? comingSoon('Perfil') : setTab(item)} style={styles.bottomItem}>
+          <TouchableOpacity key={item} onPress={() => item === '＋' ? comingSoon('Crear publicación') : item === 'Perfil' ? signOut() : setTab(item)} style={styles.bottomItem}>
             <Text style={[styles.bottomIcon, item === '＋' && styles.plus]}>{item === 'Inicio' ? '⌂' : item === 'En vivo' ? '◉' : item === 'Tienda' ? '▦' : item === 'Perfil' ? '♙' : item}</Text>
             {item !== '＋' && <Text style={styles.bottomLabel}>{item}</Text>}
           </TouchableOpacity>
