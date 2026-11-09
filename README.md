@@ -54,3 +54,8 @@ El primer build debe revisarse por compatibilidad de dependencias y configuraci�
 - Catálogo con carga de imágenes, pedidos y pagos integrados.
 - Moderación, reportes, revisión humana y apelaciones.
 - Pruebas de seguridad, privacidad, rendimiento y publicación.
+
+
+## Solicitudes de pedido
+
+Después de ejecutar `supabase/schema.sql`, ejecutá también `supabase/order-request.sql` en Supabase SQL Editor. Esta migración crea la función `create_order_request`, que valida sesión, producto activo, stock y cantidad, y toma el precio y vendedor desde la base de datos. La app permite enviar solicitudes pendientes; **no procesa cobros, no reserva stock y no confirma pagos**. No anunciar ventas pagadas hasta integrar y probar una pasarela de pago con confirmación del proveedor.
