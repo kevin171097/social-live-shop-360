@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { AccessToken } from 'livekit-server-sdk';
 
 const app = express();
@@ -12,6 +13,7 @@ const allowedOrigin = process.env.ALLOWED_ORIGIN || '*';
 
 app.use(cors({ origin: allowedOrigin === '*' ? true : allowedOrigin.split(',').map(v => v.trim()) }));
 app.use(express.json({ limit: '32kb' }));
+app.use('/api/live/token', rateLimit({ windowMs: 60 * 1000, limit: 12, standardHeaders: 'draft-7', legacyHeaders: false }));
 
 app.get('/health', (_req, res) => {
   res.json({ ok: true, service: 'kd-live-stream-server' });
@@ -19,6 +21,9 @@ app.get('/health', (_req, res) => {
 
 app.post('/api/live/token', async (req, res) => {
   try {
+    if (process.env.ALLOW_DEV_TOKENS !== 'true') {
+      return res.status(403).json({ error: 'Emisión de tokens desactivada. Habilitar solo para pruebas privadas.' });
+    }
     if (!livekitUrl || !apiKey || !apiSecret) {
       return res.status(503).json({ error: 'Streaming no configurado en el servidor.' });
     }
