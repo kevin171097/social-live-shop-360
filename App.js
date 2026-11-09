@@ -18,6 +18,7 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [products, setProducts] = useState([]);
   const [lives, setLives] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [liveSession, setLiveSession] = useState(null);
@@ -43,20 +44,23 @@ export default function App() {
     if (!supabase || !session?.user?.id) return;
     setBusy(true);
     try {
-      const [profileResult, productResult, liveResult] = await Promise.all([
+      const [profileResult, productResult, liveResult, orderResult] = await Promise.all([
         supabase.from('profiles').select('id,username,display_name,bio,avatar_url,role').eq('id', session.user.id).maybeSingle(),
         supabase.from('products').select('id,seller_id,title,description,price,currency,image_url,stock,status').or(`status.eq.active,seller_id.eq.${session.user.id}`).order('created_at', { ascending: false }).limit(60),
-        supabase.from('live_sessions').select('id,seller_id,title,category,status,started_at,profiles(display_name,username)').eq('status', 'live').order('started_at', { ascending: false }).limit(30)
+        supabase.from('live_sessions').select('id,seller_id,title,category,status,started_at,profiles(display_name,username)').eq('status', 'live').order('started_at', { ascending: false }).limit(30),
+        supabase.from('orders').select('id,buyer_id,seller_id,quantity,unit_price,currency,status,created_at,products(title)').or(`buyer_id.eq.${session.user.id},seller_id.eq.${session.user.id}`).order('created_at', { ascending: false }).limit(30)
       ]);
       if (profileResult.error) throw profileResult.error;
       if (productResult.error) throw productResult.error;
       if (liveResult.error) throw liveResult.error;
+      if (orderResult.error) throw orderResult.error;
       setProfile(profileResult.data);
       setProducts((productResult.data || []).map(p => ({
         id: p.id, name: p.title, price: new Intl.NumberFormat('es-UY', { style: 'currency', currency: p.currency || 'UYU', maximumFractionDigits: 0 }).format(Number(p.price)),
         emoji: '🛍️', color: '#59466d', description: p.description, image_url: p.image_url, stock: p.stock, status: p.status, sellerId: p.seller_id
       })));
       setLives(liveResult.data || []);
+      setOrders(orderResult.data || []);
     } catch (error) {
       setNotice(error.message || 'No se pudieron cargar los datos.');
     } finally {
@@ -299,6 +303,15 @@ export default function App() {
           <Text style={styles.heroAccent}>{profile?.display_name || session?.user?.email || 'Invitado'}</Text>
           <Text style={styles.muted}>@{profile?.username || 'usuario'}</Text>
           <Text style={styles.notice}>Tipo de cuenta: {profile?.role || 'sin configurar'}</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Mis pedidos</Text>
+          {orders.length ? orders.map(order => <View key={order.id} style={styles.product}>
+            <View style={styles.productInfo}>
+              <Text style={styles.productName}>{order.products?.title || 'Producto'}</Text>
+              <Text style={styles.muted}>Cantidad: {order.quantity} · {order.buyer_id === session?.user?.id ? 'Comprador' : 'Vendedor'}</Text>
+              <Text style={styles.productPrice}>{new Intl.NumberFormat('es-UY', { style: 'currency', currency: order.currency || 'UYU', maximumFractionDigits: 0 }).format(Number(order.unit_price) * Number(order.quantity))}</Text>
+              <Text style={styles.muted}>Estado: {order.status === 'pending' ? 'Pendiente' : order.status}</Text>
+            </View>
+          </View>) : <Text style={styles.muted}>Todavía no tenés pedidos.</Text>}
           <TouchableOpacity onPress={signOut} style={styles.secondaryButton}><Text style={styles.buttonText}>Cerrar sesión</Text></TouchableOpacity>
         </>}
         {!!notice && <Text style={styles.notice}>{notice}</Text>}
