@@ -42,6 +42,7 @@ function RoomContent({ mode, sessionId, onClose }) {
   const [likes, setLikes] = useState(0);
   const [viewers, setViewers] = useState(1);
   const [sending, setSending] = useState(false);
+  const [liking, setLiking] = useState(false);
   const [chatError, setChatError] = useState('');
   const [userName, setUserName] = useState('Usuario');
   const channelName = useMemo(() => `kdlive-room-${sessionId}`, [sessionId]);
@@ -57,12 +58,17 @@ function RoomContent({ mode, sessionId, onClose }) {
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError || !authData?.user) throw new Error('Iniciá sesión para participar del chat.');
       const userId = authData.user.id;
-      const [{ data: profile }, { data: recentMessages }, { count }] = await Promise.all([
+      const [profileResult, messagesResult, likesResult] = await Promise.all([
         supabase.from('profiles').select('display_name,username').eq('id', userId).maybeSingle(),
         supabase.from('live_messages').select('id,body,user_id,created_at,profiles(display_name,username)').eq('session_id', sessionId).order('created_at', { ascending: false }).limit(40),
         supabase.from('live_likes').select('*', { count: 'exact', head: true }).eq('session_id', sessionId)
       ]);
+      const initialError = profileResult.error || messagesResult.error || likesResult.error;
+      if (initialError) throw initialError;
       if (!active) return;
+      const profile = profileResult.data;
+      const recentMessages = messagesResult.data;
+      const count = likesResult.count;
       setUserName(profile?.display_name || profile?.username || 'Usuario');
       setMessages((recentMessages || []).reverse());
       setLikes(count || 0);
@@ -102,16 +108,29 @@ function RoomContent({ mode, sessionId, onClose }) {
     }
     setSending(true);
     setChatError('');
-    const { error } = await supabase.from('live_messages').insert({ session_id: sessionId, body });
-    if (error) setChatError(error.message || 'No se pudo enviar el comentario.');
-    else setMessage('');
-    setSending(false);
+    try {
+      const { error } = await supabase.from('live_messages').insert({ session_id: sessionId, body });
+      if (error) throw error;
+      setMessage('');
+    } catch (error) {
+      setChatError(error.message || 'No se pudo enviar el comentario. Revisá tu conexión e intentá nuevamente.');
+    } finally {
+      setSending(false);
+    }
   }
 
   async function sendLike() {
-    if (!supabase) return;
-    const { error } = await supabase.from('live_likes').insert({ session_id: sessionId });
-    if (error) setChatError(error.message || 'No se pudo enviar el me gusta.');
+    if (!supabase || liking) return;
+    setLiking(true);
+    setChatError('');
+    try {
+      const { error } = await supabase.from('live_likes').insert({ session_id: sessionId });
+      if (error) throw error;
+    } catch (error) {
+      setChatError(error.message || 'No se pudo enviar el me gusta. Intentá nuevamente.');
+    } finally {
+      setLiking(false);
+    }
   }
 
   const renderTrack = ({ item }) => (
@@ -173,7 +192,7 @@ function RoomContent({ mode, sessionId, onClose }) {
           <TouchableOpacity style={styles.send} onPress={sendMessage} disabled={sending || !message.trim()}>
             {sending ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.sendText}>Enviar</Text>}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.likeButton} onPress={sendLike}>
+          <TouchableOpacity style={styles.likeButton} onPress={sendLike} disabled={liking}>
             <Text style={styles.likeButtonText}>♥</Text>
           </TouchableOpacity>
         </View>
