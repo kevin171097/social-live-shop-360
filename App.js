@@ -226,8 +226,8 @@ export default function App() {
             <Text style={styles.livePill}>● EN DIRECTO</Text><Text style={styles.liveArtwork}>KD.LIVE</Text>
             <Text style={styles.seller}>{item.title}</Text><Text style={styles.muted}>{item.profiles?.display_name || 'Vendedor'}</Text>
           </TouchableOpacity>) : <Text style={styles.notice}>{demoMode ? 'Configuración pendiente: conectaremos las salas reales.' : 'Todavía no hay transmisiones activas. ¡Podés ser de los primeros!'}</Text>}
-          <View style={styles.sectionHead}><Text style={styles.sectionTitle}>Productos</Text><Text style={styles.muted}>{products.length} publicados</Text></View>
-          {products.slice(0, 8).map(p => <Product key={p.id} product={p} onPress={() => showNotice('Detalle de producto: próxima etapa de conexión de compras.')} />)}
+          <View style={styles.sectionHead}><Text style={styles.sectionTitle}>Productos</Text><Text style={styles.muted}>{products.filter(p => p.status === 'active').length} publicados</Text></View>
+          {products.filter(p => p.status === 'active').slice(0, 8).map(p => <Product key={p.id} product={p} onPress={() => showNotice('Detalle de producto: próxima etapa de conexión de compras.')} />)}
           {!products.length && <Text style={styles.muted}>Todavía no hay productos publicados.</Text>}
         </>}
         {tab === 'En vivo' && <>
