@@ -29,6 +29,8 @@ export default function App() {
   const [productImage, setProductImage] = useState('');
   const [savingProduct, setSavingProduct] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [orderQuantity, setOrderQuantity] = useState('1');
+  const [sendingOrder, setSendingOrder] = useState(false);
 
   useEffect(() => {
     if (!supabaseConfigured || !supabase) return undefined;
@@ -171,6 +173,34 @@ export default function App() {
     }
   }
 
+  async function requestOrder() {
+    if (!supabase || !session?.user?.id || !selectedProduct) {
+      return showNotice('Iniciá sesión para solicitar un pedido.');
+    }
+    const quantity = Number(orderQuantity);
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
+      return showNotice('Ingresá una cantidad válida entre 1 y 99.');
+    }
+    if (quantity > Number(selectedProduct.stock)) {
+      return showNotice('La cantidad supera el stock disponible.');
+    }
+    setSendingOrder(true);
+    try {
+      const { data, error } = await supabase.rpc('create_order_request', {
+        p_product_id: selectedProduct.id,
+        p_quantity: quantity
+      });
+      if (error) throw error;
+      setSelectedProduct(null);
+      setOrderQuantity('1');
+      showNotice(`Solicitud enviada correctamente. Número de pedido: ${data}`);
+    } catch (error) {
+      showNotice(error.message || 'No se pudo enviar la solicitud de pedido.');
+    } finally {
+      setSendingOrder(false);
+    }
+  }
+
   async function toggleProductStatus(product) {
     if (!supabase || !session || product.sellerId !== session.user.id) {
       return showNotice('Solo podés modificar tus propios productos.');
@@ -297,8 +327,15 @@ export default function App() {
           <Text style={styles.productPrice}>{selectedProduct.price}</Text>
           {!!selectedProduct.description && <Text style={[styles.muted, { marginTop: 10, lineHeight: 20 }]}>{selectedProduct.description}</Text>}
           <Text style={[styles.muted, { marginTop: 12 }]}>{Number(selectedProduct.stock) > 0 ? `Disponibles: ${selectedProduct.stock}` : 'Sin stock disponible'}</Text>
-          <Text style={styles.notice}>La compra y el pago seguro todavía están en desarrollo. No realices pagos por esta pantalla.</Text>
-          <TouchableOpacity onPress={() => setSelectedProduct(null)} style={styles.primaryButton}><Text style={styles.buttonText}>Volver a la tienda</Text></TouchableOpacity>
+          {Number(selectedProduct.stock) > 0 && selectedProduct.sellerId !== session?.user?.id && <>
+            <TextInput value={orderQuantity} onChangeText={setOrderQuantity} placeholder="Cantidad" placeholderTextColor="#9999aa" keyboardType="number-pad" style={styles.search} />
+            <TouchableOpacity onPress={requestOrder} disabled={sendingOrder} style={styles.primaryButton}>
+              {sendingOrder ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Solicitar pedido</Text>}
+            </TouchableOpacity>
+            <Text style={styles.notice}>Esto envía una solicitud al vendedor. Todavía no cobra ni confirma el pago; no transfieras dinero desde esta pantalla.</Text>
+          </>}
+          {selectedProduct.sellerId === session?.user?.id && <Text style={styles.notice}>Este producto pertenece a tu cuenta.</Text>}
+          <TouchableOpacity onPress={() => setSelectedProduct(null)} style={styles.secondaryButton}><Text style={styles.buttonText}>Volver a la tienda</Text></TouchableOpacity>
         </View>
       </View>}
       {!!liveSession && <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, zIndex: 30 }}>
