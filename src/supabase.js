@@ -1,10 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+// La publishable key es pública y está diseñada para usarse en el cliente.
+// Se priorizan variables de entorno para permitir cambiar el proyecto sin editar código.
+const url = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://woiadoflrlkzywvasmqd.supabase.co';
+const publishableKey =
+  process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+  '';
 
-export const supabaseConfigured = Boolean(url && anonKey);
-export const supabase = supabaseConfigured ? createClient(url, anonKey) : null;
+export const supabaseConfigured = Boolean(url && publishableKey);
+export const supabase = supabaseConfigured ? createClient(url, publishableKey) : null;
 
-// Importar supabase desde este archivo cuando se agregue autenticación y datos.
-// Nunca incluir la clave service_role en una aplicación móvil.
+// Nunca incluir una clave secret ni service_role en una aplicación móvil.
