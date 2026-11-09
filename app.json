@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Social Live Shop 360",
-    "slug": "social-live-shop-360",
+    "name": "KD.LIVE",
+    "slug": "kd-live",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
@@ -10,14 +10,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.socialliveshop360.app",
+      "bundleIdentifier": "com.kdlive.app",
       "infoPlist": {
         "NSCameraUsageDescription": "La cámara se usa para mostrar tus productos en vivo.",
         "NSMicrophoneUsageDescription": "El micrófono se usa para el audio de tus transmisiones."
       }
     },
     "android": {
-      "package": "com.socialliveshop360.app",
+      "package": "com.kdlive.app",
       "adaptiveIcon": {
         "backgroundColor": "#101018"
       },
@@ -30,8 +30,8 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Permitir que Social Live Shop 360 use la cámara.",
-          "microphonePermission": "Permitir que Social Live Shop 360 use el micrófono."
+          "cameraPermission": "Permitir que KD.LIVE use la cámara.",
+          "microphonePermission": "Permitir que KD.LIVE use el micrófono."
         }
       ]
     ]
