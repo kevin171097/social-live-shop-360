@@ -21,7 +21,8 @@
     "@livekit/react-native-webrtc": "137.0.3",
     "@config-plugins/react-native-webrtc": "13.0.0",
     "livekit-client": "2.19.0",
-    "expo-dev-client": "~6.0.20"
+    "expo-dev-client": "~6.0.20",
+    "expo-image-picker": "~17.0.10"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2"
