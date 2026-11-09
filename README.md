@@ -7,7 +7,8 @@ Aplicación social original para Android/iOS con Expo, React Native y LiveKit.
 - Pantalla de registro e inicio de sesión con email/contraseña mediante Supabase Auth; crea el perfil inicial con rol comprador y conserva roles existentes.
 - Contenido de muestra identificado claramente para no presentar espectadores, productos ni transmisiones ficticias como actividad real.
 - Vista de sala LiveKit integrada en el código móvil.
-- Acción de anfitrión que solicita un token al backend y abre una sala LiveKit.
+- Flujo móvil conectado para crear una sesión LIVE como vendedor aprobado, solicitar token al backend y abrir una sala LiveKit; el cierre actualiza el estado de la sesión.
+- Carga de productos activos y transmisiones activas desde Supabase; navegación de perfil y entrada de espectadores a salas reales.
 - Backend Node/Express que genera tokens temporales.
 - Configuración Expo para módulos nativos WebRTC y perfil EAS de Android.
 - **Aún no es una aplicación terminada ni un APK probado.** No se ha compilado ni probado en un teléfono real y el backend aún no está desplegado con credenciales privadas.
@@ -35,10 +36,10 @@ El primer build debe revisarse por compatibilidad de dependencias y configuraci�
 
 ## Pendiente antes de producción
 - Completar pruebas de autenticación Supabase, recuperación de contraseña y verificación de correo.
-- Emisión de tokens protegida por identidad autenticada y permisos del vendedor (integración de backend añadida; falta conectarla al flujo móvil).
-- Crear/cerrar sesiones LIVE en base de datos y enlazar el botón de emisión con sesiones autorizadas.
-- Descubrimiento de transmisiones reales, chat en vivo, comentarios, likes y contador de espectadores.
-- Feed de videos, perfiles, seguimiento y notificaciones.
-- Catálogo con carga de imágenes, pedidos y pagos.
+- Probar en dispositivos reales el flujo de emisión y visualización LiveKit; el código móvil ya solicita tokens autenticados.
+- Añadir interfaz completa de chat, comentarios, likes y contador real de espectadores dentro del LIVE.
+- Feed vertical de videos, perfiles públicos completos, seguimiento y notificaciones.
+- Herramientas de vendedor para publicar/editar productos, imágenes y stock.
+- Catálogo con carga de imágenes, pedidos y pagos integrados.
 - Moderación, reportes, revisión humana y apelaciones.
 - Pruebas de seguridad, privacidad, rendimiento y publicación.
