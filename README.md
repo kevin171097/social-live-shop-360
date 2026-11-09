@@ -1,43 +1,36 @@
-# Social Live Shop 360 — app inicial
+# KD.LIVE — base de desarrollo
 
-Proyecto base multiplataforma con Expo / React Native y Supabase preparado para Android, iOS y web.
+Aplicación social original para Android/iOS basada en Expo + React Native. Esta rama conserva el prototipo anterior y prepara el backend de transmisiones reales con LiveKit.
 
-## Incluye
-- Interfaz móvil con Inicio, En vivo y Tienda.
-- Tarjetas de vendedores y productos de demostración.
-- Pantalla modal de LIVE demostrativo.
-- Búsqueda local de productos.
-- Archivo `.env.example` para conectar Supabase.
-- Esquema SQL inicial: perfiles, productos, transmisiones, pedidos, reportes y apelaciones.
+## Estado actual (transparente)
+- Interfaz móvil inicial con Inicio, En vivo y Tienda, búsqueda local y vista previa de cámara.
+- Esquema inicial de datos Supabase para perfiles, productos, lives, pedidos y reportes.
+- Backend Node/Express para emitir tokens LiveKit desde el servidor.
+- **Todavía no es una app terminada ni un APK instalable.** La vista previa de cámara no transmite por Internet; el cliente móvil aún debe integrarse con LiveKit y probarse en dispositivos reales.
+- Aún faltan autenticación, chat persistente, feed de videos, notificaciones, compras/pagos, moderación operativa, panel de administración, pruebas y publicación.
 
-## Estado real
-Esto es un **starter de desarrollo**, no una aplicación lista para publicar ni para recibir pagos. No tiene todavía:
-- Autenticación ni recuperación de cuenta.
-- Streaming real, chat, moderación de video ni notificaciones.
-- Integración de pagos, reembolsos, envíos o retiros.
-- Panel de administración y revisión humana de reportes.
-- Verificación de vendedores ni prevención completa de fraude.
+## App móvil
+Requiere Node.js y un entorno Expo con build nativo para los módulos de streaming. Expo Go por sí solo no alcanza para integrar LiveKit React Native.
 
-No se puede prometer que una transmisión nunca sea reportada. El diseño busca que los reportes no causen una suspensión automática sin evaluación, evidencia, controles contra abuso y una vía de apelación.
+```bash
+npm install
+npx expo start
+```
 
-## Ejecutar
-Requiere Node.js y Expo CLI/Expo Go:
-1. `npm install`
-2. `npx expo start`
-3. Escanear el QR con Expo Go o abrir el emulador.
+Para streaming nativo se deberá configurar un build de desarrollo/preview con EAS Build y añadir el SDK cliente LiveKit compatible con Expo SDK usado por este proyecto.
 
-## Supabase
-1. Crear un proyecto Supabase.
-2. Ejecutar `supabase/schema.sql` en SQL Editor.
-3. Copiar `.env.example` a `.env`.
-4. Completar `EXPO_PUBLIC_SUPABASE_URL` y `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
+## Backend LiveKit (Render)
+1. Crear un Web Service en Render apuntando a esta rama.
+2. Root Directory: `server`.
+3. Build Command: `npm install`.
+4. Start Command: `npm start`.
+5. Configurar en Render, como variables privadas: `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` y opcionalmente `ALLOWED_ORIGIN`.
+6. No guardar claves privadas en GitHub ni enviarlas por chat. Si una clave fue compartida, rotarla en LiveKit.
 
-Nunca poner `service_role` ni secretos de proveedores en el cliente móvil. Las operaciones privilegiadas deben ejecutarse en un backend seguro.
+El endpoint `POST /api/live/token` emite un token temporal de acceso a una sala. Esta primera versión es solo un backend de desarrollo: antes de producción se debe exigir autenticación de usuario, validar permisos de anfitrión/espectador, limitar salas y aplicar rate limits.
 
-## Próximas etapas recomendadas
-1. Autenticación, perfiles y roles de vendedor.
-2. Alta de productos, stock y catálogo.
-3. Streaming y chat en tiempo real con proveedor especializado.
-4. Pedidos y pagos con webhooks verificados.
-5. Moderación con reglas transparentes, revisión humana, apelaciones y auditoría.
-6. Pruebas, privacidad, seguridad y publicación en Play Store / App Store.
+## Base de datos
+El esquema inicial se encuentra en `supabase/schema.sql`. Revisar las políticas RLS y completar pruebas antes de usar datos reales.
+
+## Seguridad y moderación
+No se puede garantizar que una transmisión nunca reciba reportes. KD.LIVE debe contar con reglas claras, controles antiabuso, revisión humana, evidencia, sanciones proporcionales y apelaciones.
