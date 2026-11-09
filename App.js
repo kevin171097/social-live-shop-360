@@ -86,7 +86,7 @@ export default function App() {
           {visibleProducts.length === 0 && <Text style={styles.muted}>No encontramos productos con esa búsqueda.</Text>}
         </>}
         {!!notice && <Text style={styles.notice}>{notice}</Text>}
-        <Text style={styles.footer}>Social Live Shop 360 · Prototipo inicial</Text>
+        <Text style={styles.footer}>KD.LIVE · Prototipo inicial</Text>
       </ScrollView>
       <View style={styles.bottom}>
         {['Inicio', 'En vivo', '＋', 'Tienda', 'Perfil'].map(item => (
