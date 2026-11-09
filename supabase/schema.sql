@@ -107,3 +107,64 @@ create policy "user creates appeal" on public.report_appeals for insert with che
 create policy "appellant reads own appeals" on public.report_appeals for select using (appellant_id = auth.uid());
 
 -- Acciones administrativas y cambios de estado requieren backend seguro.
+
+
+-- Endurecimiento de permisos: un usuario no puede asignarse el rol seller/admin.
+create or replace function public.prevent_self_role_escalation()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.role is distinct from old.role
+     and auth.uid() is not null
+     and not exists (
+       select 1 from public.profiles actor
+       where actor.id = auth.uid() and actor.role = 'admin'
+     ) then
+    raise exception 'Solo un administrador puede cambiar roles';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_role_guard on public.profiles;
+create trigger profiles_role_guard
+before update of role on public.profiles
+for each row execute function public.prevent_self_role_escalation();
+
+-- Los compradores no pueden crear publicaciones ni transmisiones.
+drop policy if exists "seller creates products" on public.products;
+create policy "seller creates products" on public.products
+for insert with check (
+  seller_id = auth.uid()
+  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('seller','admin'))
+);
+
+drop policy if exists "seller updates products" on public.products;
+create policy "seller updates products" on public.products
+for update using (
+  seller_id = auth.uid()
+  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('seller','admin'))
+) with check (
+  seller_id = auth.uid()
+  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('seller','admin'))
+);
+
+drop policy if exists "seller creates live" on public.live_sessions;
+create policy "seller creates live" on public.live_sessions
+for insert with check (
+  seller_id = auth.uid()
+  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('seller','admin'))
+);
+
+drop policy if exists "seller updates live" on public.live_sessions;
+create policy "seller updates live" on public.live_sessions
+for update using (
+  seller_id = auth.uid()
+  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('seller','admin'))
+) with check (
+  seller_id = auth.uid()
+  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('seller','admin'))
+);
