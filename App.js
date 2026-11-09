@@ -22,6 +22,12 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [liveSession, setLiveSession] = useState(null);
   const [liveTitle, setLiveTitle] = useState('');
+  const [productTitle, setProductTitle] = useState('');
+  const [productDescription, setProductDescription] = useState('');
+  const [productPrice, setProductPrice] = useState('');
+  const [productStock, setProductStock] = useState('1');
+  const [productImage, setProductImage] = useState('');
+  const [savingProduct, setSavingProduct] = useState(false);
 
   useEffect(() => {
     if (!supabaseConfigured || !supabase) return undefined;
@@ -128,6 +134,42 @@ export default function App() {
     }
   }
 
+  async function publishProduct() {
+    if (!supabase || !session || !profile) return showNotice('Iniciá sesión para publicar.');
+    if (!['seller', 'admin'].includes(profile.role)) return showNotice('Tu cuenta necesita permiso de vendedor para publicar productos.');
+    const title = productTitle.trim();
+    const price = Number(productPrice.replace(',', '.'));
+    const stock = Number(productStock);
+    if (title.length < 3) return showNotice('El nombre del producto debe tener al menos 3 caracteres.');
+    if (!Number.isFinite(price) || price <= 0) return showNotice('Ingresá un precio válido mayor que cero.');
+    if (!Number.isInteger(stock) || stock < 0) return showNotice('El stock debe ser un número entero igual o mayor que cero.');
+    setSavingProduct(true);
+    try {
+      const { error } = await supabase.from('products').insert({
+        seller_id: session.user.id,
+        title,
+        description: productDescription.trim(),
+        price,
+        currency: 'UYU',
+        image_url: productImage.trim() || null,
+        stock,
+        status: stock > 0 ? 'active' : 'sold_out'
+      });
+      if (error) throw error;
+      setProductTitle('');
+      setProductDescription('');
+      setProductPrice('');
+      setProductStock('1');
+      setProductImage('');
+      showNotice('¡Producto publicado! Ya puede aparecer en la tienda.');
+      await loadData();
+    } catch (error) {
+      showNotice(error.message || 'No se pudo publicar el producto.');
+    } finally {
+      setSavingProduct(false);
+    }
+  }
+
   async function closeLive() {
     const current = liveSession;
     setLiveSession(null);
@@ -184,6 +226,17 @@ export default function App() {
         </>}
         {tab === 'Tienda' && <>
           <Text style={styles.sectionTitle}>Tienda</Text>
+          {['seller', 'admin'].includes(profile?.role) && <>
+            <Text style={[styles.sectionTitle, { marginTop: 18, fontSize: 16 }]}>Publicar producto</Text>
+            <TextInput value={productTitle} onChangeText={setProductTitle} placeholder="Nombre del producto" placeholderTextColor="#9999aa" style={styles.search} maxLength={90} />
+            <TextInput value={productDescription} onChangeText={setProductDescription} placeholder="Descripción (opcional)" placeholderTextColor="#9999aa" style={styles.search} maxLength={500} />
+            <TextInput value={productPrice} onChangeText={setProductPrice} placeholder="Precio en pesos uruguayos" placeholderTextColor="#9999aa" style={styles.search} keyboardType="decimal-pad" />
+            <TextInput value={productStock} onChangeText={setProductStock} placeholder="Cantidad disponible" placeholderTextColor="#9999aa" style={styles.search} keyboardType="number-pad" />
+            <TextInput value={productImage} onChangeText={setProductImage} placeholder="URL de imagen (opcional)" placeholderTextColor="#9999aa" style={styles.search} autoCapitalize="none" keyboardType="url" />
+            <TouchableOpacity onPress={publishProduct} disabled={savingProduct} style={styles.primaryButton}>
+              {savingProduct ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>＋ Publicar en la tienda</Text>}
+            </TouchableOpacity>
+          </>}
           <TextInput value={query} onChangeText={setQuery} placeholder="Buscar productos..." placeholderTextColor="#9999aa" style={styles.search} />
           {visibleProducts.map(p => <Product key={p.id} product={p} onPress={() => showNotice('El detalle y la compra segura se conectarán en la siguiente etapa.')} />)}
           {!visibleProducts.length && <Text style={styles.muted}>No hay productos para mostrar.</Text>}
