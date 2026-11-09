@@ -59,3 +59,14 @@ El primer build debe revisarse por compatibilidad de dependencias y configuraci�
 ## Solicitudes de pedido
 
 Después de ejecutar `supabase/schema.sql`, ejecutá también `supabase/order-request.sql` en Supabase SQL Editor. Esta migración crea la función `create_order_request`, que valida sesión, producto activo, stock y cantidad, y toma el precio y vendedor desde la base de datos. La app permite enviar solicitudes pendientes; **no procesa cobros, no reserva stock y no confirma pagos**. No anunciar ventas pagadas hasta integrar y probar una pasarela de pago con confirmación del proveedor.
+
+
+## Fotos de productos desde el celular
+
+La tienda permite elegir una foto de la galería, recortarla y subirla a Supabase Storage. Antes de usar esta función:
+1. Ejecutá `supabase/product-images.sql` en Supabase SQL Editor.
+2. Confirmá que el bucket público `product-images` quedó creado.
+3. Generá un nuevo development build o APK con EAS; Expo Go no incluye el módulo nativo requerido por esta app.
+4. Iniciá sesión con una cuenta aprobada como vendedor para publicar imágenes.
+
+El bucket permite lectura pública de imágenes de productos. Solo vendedores autenticados pueden subir, modificar o borrar archivos dentro de su propia carpeta. Límite por archivo: 5 MB; formatos admitidos: JPEG, PNG y WebP.
