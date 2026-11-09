@@ -42,7 +42,7 @@ export default function App() {
     try {
       const [profileResult, productResult, liveResult] = await Promise.all([
         supabase.from('profiles').select('id,username,display_name,bio,avatar_url,role').eq('id', session.user.id).maybeSingle(),
-        supabase.from('products').select('id,seller_id,title,description,price,currency,image_url,stock,status').eq('status', 'active').order('created_at', { ascending: false }).limit(40),
+        supabase.from('products').select('id,seller_id,title,description,price,currency,image_url,stock,status').or(`status.eq.active,seller_id.eq.${session.user.id}`).order('created_at', { ascending: false }).limit(60),
         supabase.from('live_sessions').select('id,seller_id,title,category,status,started_at,profiles(display_name,username)').eq('status', 'live').order('started_at', { ascending: false }).limit(30)
       ]);
       if (profileResult.error) throw profileResult.error;
@@ -51,7 +51,7 @@ export default function App() {
       setProfile(profileResult.data);
       setProducts((productResult.data || []).map(p => ({
         id: p.id, name: p.title, price: new Intl.NumberFormat('es-UY', { style: 'currency', currency: p.currency || 'UYU', maximumFractionDigits: 0 }).format(Number(p.price)),
-        emoji: '🛍️', color: '#59466d', description: p.description, image_url: p.image_url, stock: p.stock
+        emoji: '🛍️', color: '#59466d', description: p.description, image_url: p.image_url, stock: p.stock, status: p.status, sellerId: p.seller_id
       })));
       setLives(liveResult.data || []);
     } catch (error) {
@@ -170,6 +170,21 @@ export default function App() {
     }
   }
 
+  async function toggleProductStatus(product) {
+    if (!supabase || !session || product.sellerId !== session.user.id) {
+      return showNotice('Solo podés modificar tus propios productos.');
+    }
+    const nextStatus = product.status === 'active' ? 'paused' : (product.stock > 0 ? 'active' : 'sold_out');
+    try {
+      const { error } = await supabase.from('products').update({ status: nextStatus }).eq('id', product.id).eq('seller_id', session.user.id);
+      if (error) throw error;
+      showNotice(nextStatus === 'active' ? 'Producto nuevamente visible en la tienda.' : 'Producto pausado; ya no aparece para compradores.');
+      await loadData();
+    } catch (error) {
+      showNotice(error.message || 'No se pudo actualizar el producto.');
+    }
+  }
+
   async function closeLive() {
     const current = liveSession;
     setLiveSession(null);
@@ -238,7 +253,14 @@ export default function App() {
             </TouchableOpacity>
           </>}
           <TextInput value={query} onChangeText={setQuery} placeholder="Buscar productos..." placeholderTextColor="#9999aa" style={styles.search} />
-          {visibleProducts.map(p => <Product key={p.id} product={p} onPress={() => showNotice('El detalle y la compra segura se conectarán en la siguiente etapa.')} />)}
+          {visibleProducts.map(p => <View key={p.id}>
+            <Product product={p} onPress={() => showNotice('El detalle y la compra segura se conectarán en la siguiente etapa.')} />
+            {p.sellerId === session?.user?.id && (
+              <TouchableOpacity onPress={() => toggleProductStatus(p)} style={styles.secondaryButton}>
+                <Text style={styles.buttonText}>{p.status === 'active' ? 'Pausar publicación' : p.stock > 0 ? 'Volver a publicar' : 'Sin stock'}</Text>
+              </TouchableOpacity>
+            )}
+          </View>)}
           {!visibleProducts.length && <Text style={styles.muted}>No hay productos para mostrar.</Text>}
         </>}
         {tab === 'Perfil' && <>
