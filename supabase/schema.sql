@@ -90,12 +90,17 @@ alter table public.reports enable row level security;
 alter table public.report_appeals enable row level security;
 
 create policy "profiles readable" on public.profiles for select using (true);
-create policy "profile owner inserts" on public.profiles for insert with check (auth.uid() = id);
+drop policy if exists "profile owner inserts" on public.profiles;
+create policy "profile owner inserts" on public.profiles for insert with check (auth.uid() = id and role = 'buyer');
 create policy "profile owner updates" on public.profiles for update using (auth.uid() = id) with check (auth.uid() = id);
 create policy "active products readable" on public.products for select using (status = 'active' or seller_id = auth.uid());
 create policy "seller creates products" on public.products for insert with check (seller_id = auth.uid());
 create policy "seller updates products" on public.products for update using (seller_id = auth.uid()) with check (seller_id = auth.uid());
-create policy "seller deletes products" on public.products for delete using (seller_id = auth.uid());
+drop policy if exists "seller deletes products" on public.products;
+create policy "seller deletes products" on public.products for delete using (
+  seller_id = auth.uid()
+  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('seller','admin'))
+);
 create policy "live sessions readable" on public.live_sessions for select using (true);
 create policy "seller creates live" on public.live_sessions for insert with check (seller_id = auth.uid());
 create policy "seller updates live" on public.live_sessions for update using (seller_id = auth.uid()) with check (seller_id = auth.uid());
