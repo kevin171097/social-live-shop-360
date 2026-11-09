@@ -71,7 +71,7 @@ export default function App() {
   async function enterLive(item, mode) {
     if (!session || !API_URL) {
       showNotice('Falta iniciar sesión o configurar la dirección segura del servidor LIVE.');
-      return;
+      return false;
     }
     try {
       setBusy(true);
@@ -82,9 +82,14 @@ export default function App() {
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || 'No se pudo conectar al LIVE.');
+      if (!payload.token || !payload.serverUrl || payload.role !== mode) {
+        throw new Error('El servidor devolvió datos de conexión incompletos o un permiso inesperado.');
+      }
       setLiveSession({ token: payload.token, serverUrl: payload.serverUrl, mode: payload.role, sessionId: item.id });
+      return true;
     } catch (error) {
       showNotice(error.message || 'Error al entrar al LIVE.');
+      return false;
     } finally {
       setBusy(false);
     }
@@ -102,7 +107,18 @@ export default function App() {
         seller_id: session.user.id, title, category: 'general', status: 'live', stream_provider: 'livekit', started_at: new Date().toISOString()
       }).select('id,seller_id,title,status').single();
       if (error) throw error;
-      await enterLive(created, 'host');
+      const connected = await enterLive(created, 'host');
+      if (!connected) {
+        const { error: cleanupError } = await supabase
+          .from('live_sessions')
+          .update({ status: 'ended', ended_at: new Date().toISOString() })
+          .eq('id', created.id);
+        if (cleanupError) {
+          showNotice('No se pudo conectar y tampoco limpiar el estado de la transmisión. Revisá la sesión desde el panel de administración.');
+        }
+        await loadData();
+        return;
+      }
       setLiveTitle('');
       await loadData();
     } catch (error) {
