@@ -46,9 +46,10 @@ export default function App() {
       return;
     }
     try {
+      const baseUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
       const roomName = 'kdlive_' + Date.now();
       const identity = 'seller_' + Date.now();
-      const response = await fetch(apiUrl + '/api/live/token', {
+      const response = await fetch(baseUrl + '/api/live/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ roomName, identity, role: 'host' }),
@@ -123,7 +124,7 @@ export default function App() {
         <View style={styles.modal}>
           <View style={styles.modalHead}><Text style={styles.modalTitle}>LIVE · DEMOSTRACIÓN</Text><TouchableOpacity onPress={() => setSelectedLive(null)}><Text style={styles.close}>✕</Text></TouchableOpacity></View>
           <View style={[styles.videoPlaceholder, { backgroundColor: selectedLive.color }]}>
-            <Text style={styles.videoTitle}>KD.LIVE{"\n"}<Text style={styles.videoStrong}>SHOP 360</Text></Text>
+            <Text style={styles.videoTitle}>KD.LIVE{"\n"}<Text style={styles.videoStrong}></Text></Text>
             <Text style={styles.videoCaption}>Acá aparecerá la transmisión real del vendedor.</Text>
           </View>
           <Text style={styles.seller}>{selectedLive.seller}</Text><Text style={styles.muted}>Preguntá por talles, colores y envíos.</Text>
@@ -131,7 +132,8 @@ export default function App() {
           <Text style={styles.smallNote}>Video, chat y pagos reales aún no están conectados.</Text>
         </View>
       </View>}
-      {liveSession && <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, zIndex: 30 }}><LiveSession {...liveSession} onClose={() => setLiveSession(null)} /></View>}\n      {showCamera && <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, zIndex: 20, backgroundColor: '#000', padding: 14, paddingTop: 42 }}>
+      {liveSession && <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, zIndex: 30 }}><LiveSession {...liveSession} onClose={() => setLiveSession(null)} /></View>}
+      {showCamera && <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, zIndex: 20, backgroundColor: '#000', padding: 14, paddingTop: 42 }}>
         <CameraView style={{ flex: 1, borderRadius: 16, overflow: 'hidden' }} facing={cameraFacing} />
         <View style={{ position: 'absolute', top: 52, left: 24, right: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={{ color: '#fff', backgroundColor: '#d82e69', padding: 8, borderRadius: 8, fontWeight: '900' }}>● CÁMARA LISTA</Text>
