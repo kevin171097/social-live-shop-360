@@ -4,6 +4,7 @@ Aplicación social original para Android/iOS con Expo, React Native y LiveKit.
 
 ## Estado actual
 - Interfaz móvil refinada con navegación Inicio, En vivo y Tienda, tarjetas y estilos adaptados a Android/iOS.
+- Pantalla de registro e inicio de sesión con email/contraseña mediante Supabase Auth; crea el perfil inicial con rol comprador y conserva roles existentes.
 - Contenido de muestra identificado claramente para no presentar espectadores, productos ni transmisiones ficticias como actividad real.
 - Vista de sala LiveKit integrada en el código móvil.
 - Acción de anfitrión que solicita un token al backend y abre una sala LiveKit.
@@ -33,7 +34,7 @@ Cuando Render entregue una URL HTTPS, configurar `EXPO_PUBLIC_API_URL` con esa U
 El primer build debe revisarse por compatibilidad de dependencias y configuración nativa. No se afirma que ya esté compilado.
 
 ## Pendiente antes de producción
-- Autenticación de usuarios y roles con Supabase.
+- Completar pruebas de autenticación Supabase, recuperación de contraseña y verificación de correo.
 - Emisión de tokens protegida por identidad autenticada y permisos del vendedor (integración de backend añadida; falta conectarla al flujo móvil).
 - Crear/cerrar sesiones LIVE en base de datos y enlazar el botón de emisión con sesiones autorizadas.
 - Descubrimiento de transmisiones reales, chat en vivo, comentarios, likes y contador de espectadores.
