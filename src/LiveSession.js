@@ -54,8 +54,11 @@ function RoomContent({ mode, sessionId, onClose }) {
         setChatError('El chat necesita conexión con Supabase.');
         return;
       }
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData?.user) throw new Error('Iniciá sesión para participar del chat.');
+      const userId = authData.user.id;
       const [{ data: profile }, { data: recentMessages }, { count }] = await Promise.all([
-        supabase.from('profiles').select('display_name,username').maybeSingle(),
+        supabase.from('profiles').select('display_name,username').eq('id', userId).maybeSingle(),
         supabase.from('live_messages').select('id,body,user_id,created_at,profiles(display_name,username)').eq('session_id', sessionId).order('created_at', { ascending: false }).limit(40),
         supabase.from('live_likes').select('*', { count: 'exact', head: true }).eq('session_id', sessionId)
       ]);
@@ -64,7 +67,7 @@ function RoomContent({ mode, sessionId, onClose }) {
       setMessages((recentMessages || []).reverse());
       setLikes(count || 0);
 
-      channel = supabase.channel(channelName, { config: { presence: { key: 'viewer' } } });
+      channel = supabase.channel(channelName, { config: { presence: { key: userId } } });
       channel
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_messages', filter: `session_id=eq.${sessionId}` }, async payload => {
           const row = payload.new;
@@ -79,8 +82,7 @@ function RoomContent({ mode, sessionId, onClose }) {
         })
         .subscribe(async status => {
           if (status === 'SUBSCRIBED') {
-            const { data: auth } = await supabase.auth.getUser();
-            if (auth?.user) await channel.track({ user_id: auth.user.id, online_at: new Date().toISOString() });
+            await channel.track({ user_id: userId, online_at: new Date().toISOString() });
           }
         });
     }
