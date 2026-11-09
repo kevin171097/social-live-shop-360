@@ -28,6 +28,7 @@ export default function App() {
   const [productStock, setProductStock] = useState('1');
   const [productImage, setProductImage] = useState('');
   const [savingProduct, setSavingProduct] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     if (!supabaseConfigured || !supabase) return undefined;
@@ -227,7 +228,7 @@ export default function App() {
             <Text style={styles.seller}>{item.title}</Text><Text style={styles.muted}>{item.profiles?.display_name || 'Vendedor'}</Text>
           </TouchableOpacity>) : <Text style={styles.notice}>{demoMode ? 'Configuración pendiente: conectaremos las salas reales.' : 'Todavía no hay transmisiones activas. ¡Podés ser de los primeros!'}</Text>}
           <View style={styles.sectionHead}><Text style={styles.sectionTitle}>Productos</Text><Text style={styles.muted}>{products.filter(p => p.status === 'active').length} publicados</Text></View>
-          {products.filter(p => p.status === 'active').slice(0, 8).map(p => <Product key={p.id} product={p} onPress={() => showNotice('Detalle de producto: próxima etapa de conexión de compras.')} />)}
+          {products.filter(p => p.status === 'active').slice(0, 8).map(p => <Product key={p.id} product={p} onPress={() => setSelectedProduct(p)} />)}
           {!products.length && <Text style={styles.muted}>Todavía no hay productos publicados.</Text>}
         </>}
         {tab === 'En vivo' && <>
@@ -254,7 +255,7 @@ export default function App() {
           </>}
           <TextInput value={query} onChangeText={setQuery} placeholder="Buscar productos..." placeholderTextColor="#9999aa" style={styles.search} />
           {visibleProducts.map(p => <View key={p.id}>
-            <Product product={p} onPress={() => showNotice('El detalle y la compra segura se conectarán en la siguiente etapa.')} />
+            <Product product={p} onPress={() => setSelectedProduct(p)} />
             {p.sellerId === session?.user?.id && (
               <TouchableOpacity onPress={() => toggleProductStatus(p)} style={styles.secondaryButton}>
                 <Text style={styles.buttonText}>{p.status === 'active' ? 'Pausar publicación' : p.stock > 0 ? 'Volver a publicar' : 'Sin stock'}</Text>
@@ -281,6 +282,25 @@ export default function App() {
           </TouchableOpacity>
         ))}
       </View>
+      {!!selectedProduct && <View style={styles.modalShade}>
+        <View style={styles.modal}>
+          <View style={styles.modalHead}>
+            <Text style={styles.modalTitle}>DETALLE DEL PRODUCTO</Text>
+            <TouchableOpacity onPress={() => setSelectedProduct(null)}><Text style={styles.close}>✕</Text></TouchableOpacity>
+          </View>
+          {selectedProduct.image_url ? (
+            <Image source={{ uri: selectedProduct.image_url }} style={{ width: '100%', height: 210, borderRadius: 14, marginBottom: 14, backgroundColor: '#292938' }} resizeMode="contain" />
+          ) : (
+            <View style={[styles.videoPlaceholder, { height: 150, marginBottom: 14, backgroundColor: '#292039' }]}><Text style={{ fontSize: 48 }}>{selectedProduct.emoji || '🛍️'}</Text></View>
+          )}
+          <Text style={styles.sectionTitle}>{selectedProduct.name}</Text>
+          <Text style={styles.productPrice}>{selectedProduct.price}</Text>
+          {!!selectedProduct.description && <Text style={[styles.muted, { marginTop: 10, lineHeight: 20 }]}>{selectedProduct.description}</Text>}
+          <Text style={[styles.muted, { marginTop: 12 }]}>{Number(selectedProduct.stock) > 0 ? `Disponibles: ${selectedProduct.stock}` : 'Sin stock disponible'}</Text>
+          <Text style={styles.notice}>La compra y el pago seguro todavía están en desarrollo. No realices pagos por esta pantalla.</Text>
+          <TouchableOpacity onPress={() => setSelectedProduct(null)} style={styles.primaryButton}><Text style={styles.buttonText}>Volver a la tienda</Text></TouchableOpacity>
+        </View>
+      </View>}
       {!!liveSession && <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, zIndex: 30 }}>
         <LiveSession {...liveSession} onClose={closeLive} />
       </View>}
