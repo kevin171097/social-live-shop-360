@@ -5,6 +5,7 @@ import { styles } from './src/styles';
 import { supabase, supabaseConfigured } from './src/supabase';
 import AuthScreen from './src/AuthScreen';
 import { registerGlobals } from '@livekit/react-native';
+import * as ImagePicker from 'expo-image-picker';
 import LiveSession from './src/LiveSession';
 
 registerGlobals();
@@ -28,6 +29,8 @@ export default function App() {
   const [productPrice, setProductPrice] = useState('');
   const [productStock, setProductStock] = useState('1');
   const [productImage, setProductImage] = useState('');
+  const [pickedProductImage, setPickedProductImage] = useState(null);
+  const [uploadingProductImage, setUploadingProductImage] = useState(false);
   const [savingProduct, setSavingProduct] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [orderQuantity, setOrderQuantity] = useState('1');
@@ -141,6 +144,30 @@ export default function App() {
     }
   }
 
+  async function chooseProductImage() {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) return showNotice('Necesitamos permiso para acceder a tus fotos y elegir una imagen.');
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.8 });
+      if (!result.canceled && result.assets?.[0]) { setPickedProductImage(result.assets[0]); setProductImage(''); }
+    } catch (error) { showNotice(error.message || 'No se pudo abrir la galería.'); }
+  }
+
+  async function uploadPickedProductImage() {
+    if (!pickedProductImage) return productImage.trim() || null;
+    if (!supabase || !session?.user?.id) throw new Error('Iniciá sesión para subir la imagen.');
+    setUploadingProductImage(true);
+    try {
+      const asset = pickedProductImage;
+      const response = await fetch(asset.uri);
+      const blob = await response.blob();
+      const extension = (asset.fileName?.split('.').pop() || (asset.mimeType === 'image/png' ? 'png' : asset.mimeType === 'image/webp' ? 'webp' : 'jpg')).toLowerCase();
+      const path = session.user.id + '/' + Date.now() + '.' + extension;
+      const { error } = await supabase.storage.from('product-images').upload(path, blob, { contentType: asset.mimeType || 'image/jpeg', upsert: false });
+      if (error) throw error;
+      return supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+    } finally { setUploadingProductImage(false); }
+  }
   async function publishProduct() {
     if (!supabase || !session || !profile) return showNotice('Iniciá sesión para publicar.');
     if (!['seller', 'admin'].includes(profile.role)) return showNotice('Tu cuenta necesita permiso de vendedor para publicar productos.');
@@ -152,13 +179,14 @@ export default function App() {
     if (!Number.isInteger(stock) || stock < 0) return showNotice('El stock debe ser un número entero igual o mayor que cero.');
     setSavingProduct(true);
     try {
+      const imageUrl = await uploadPickedProductImage();
       const { error } = await supabase.from('products').insert({
         seller_id: session.user.id,
         title,
         description: productDescription.trim(),
         price,
         currency: 'UYU',
-        image_url: productImage.trim() || null,
+        image_url: imageUrl,
         stock,
         status: stock > 0 ? 'active' : 'sold_out'
       });
@@ -168,6 +196,7 @@ export default function App() {
       setProductPrice('');
       setProductStock('1');
       setProductImage('');
+      setPickedProductImage(null);
       showNotice('¡Producto publicado! Ya puede aparecer en la tienda.');
       await loadData();
     } catch (error) {
@@ -282,9 +311,13 @@ export default function App() {
             <TextInput value={productDescription} onChangeText={setProductDescription} placeholder="Descripción (opcional)" placeholderTextColor="#9999aa" style={styles.search} maxLength={500} />
             <TextInput value={productPrice} onChangeText={setProductPrice} placeholder="Precio en pesos uruguayos" placeholderTextColor="#9999aa" style={styles.search} keyboardType="decimal-pad" />
             <TextInput value={productStock} onChangeText={setProductStock} placeholder="Cantidad disponible" placeholderTextColor="#9999aa" style={styles.search} keyboardType="number-pad" />
-            <TextInput value={productImage} onChangeText={setProductImage} placeholder="URL de imagen (opcional)" placeholderTextColor="#9999aa" style={styles.search} autoCapitalize="none" keyboardType="url" />
-            <TouchableOpacity onPress={publishProduct} disabled={savingProduct} style={styles.primaryButton}>
-              {savingProduct ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>＋ Publicar en la tienda</Text>}
+            <TouchableOpacity onPress={chooseProductImage} style={styles.secondaryButton}>
+              <Text style={styles.buttonText}>{pickedProductImage ? 'Cambiar foto de galería' : '＋ Elegir foto desde el celular'}</Text>
+            </TouchableOpacity>
+            {!!pickedProductImage && <Image source={{ uri: pickedProductImage.uri }} style={{ width: 120, height: 120, borderRadius: 12, marginBottom: 12 }} resizeMode="cover" />}
+            <TextInput value={productImage} onChangeText={value => { setProductImage(value); setPickedProductImage(null); }} placeholder="O pegar URL de imagen (opcional)" placeholderTextColor="#9999aa" style={styles.search} autoCapitalize="none" keyboardType="url" />
+            <TouchableOpacity onPress={publishProduct} disabled={savingProduct || uploadingProductImage} style={styles.primaryButton}>
+              {savingProduct || uploadingProductImage ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>＋ Publicar en la tienda</Text>}
             </TouchableOpacity>
           </>}
           <TextInput value={query} onChangeText={setQuery} placeholder="Buscar productos..." placeholderTextColor="#9999aa" style={styles.search} />
