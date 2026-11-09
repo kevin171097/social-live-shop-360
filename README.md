@@ -3,7 +3,8 @@
 Aplicación social original para Android/iOS con Expo, React Native y LiveKit.
 
 ## Estado actual
-- Interfaz inicial con Inicio, En vivo y Tienda.
+- Interfaz móvil refinada con navegación Inicio, En vivo y Tienda, tarjetas y estilos adaptados a Android/iOS.
+- Contenido de muestra identificado claramente para no presentar espectadores, productos ni transmisiones ficticias como actividad real.
 - Vista de sala LiveKit integrada en el código móvil.
 - Acción de anfitrión que solicita un token al backend y abre una sala LiveKit.
 - Backend Node/Express que genera tokens temporales.
@@ -19,7 +20,7 @@ El archivo `render.yaml` describe el servicio. Al crearlo, seleccionar la rama `
 - `LIVEKIT_API_KEY`: API Key regenerada.
 - `LIVEKIT_API_SECRET`: API Secret regenerada.
 
-No escribir secretos en GitHub, en el código de la app ni en el chat. El endpoint actual de emisión de tokens es una etapa de desarrollo: **no debe publicarse para usuarios reales hasta añadir autenticación y autorización de vendedores con Supabase**, límites de uso y protección antiabuso.
+No escribir secretos en GitHub, en el código de la app ni en el chat. El endpoint exige un token de sesión Supabase, valida el usuario y comprueba el rol del vendedor y la propiedad/estado de la transmisión. Mantener desactivados los tokens de desarrollo.
 
 Cuando Render entregue una URL HTTPS, configurar `EXPO_PUBLIC_API_URL` con esa URL sin barra final en el entorno de compilación móvil.
 
@@ -33,8 +34,8 @@ El primer build debe revisarse por compatibilidad de dependencias y configuraci�
 
 ## Pendiente antes de producción
 - Autenticación de usuarios y roles con Supabase.
-- Emisión de tokens protegida por identidad autenticada y permisos del vendedor.
-- Crear/cerrar sesiones LIVE en base de datos.
+- Emisión de tokens protegida por identidad autenticada y permisos del vendedor (integración de backend añadida; falta conectarla al flujo móvil).
+- Crear/cerrar sesiones LIVE en base de datos y enlazar el botón de emisión con sesiones autorizadas.
 - Descubrimiento de transmisiones reales, chat en vivo, comentarios, likes y contador de espectadores.
 - Feed de videos, perfiles, seguimiento y notificaciones.
 - Catálogo con carga de imágenes, pedidos y pagos.
