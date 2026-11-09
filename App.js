@@ -4,6 +4,10 @@ import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import { styles } from './src/styles';
 import { supabaseConfigured } from './src/supabase';
+import { registerGlobals } from '@livekit/react-native';
+import LiveSession from './src/LiveSession';
+
+registerGlobals();
 
 const lives = [
   { seller: 'Moda Urbana Uy', category: 'Ropa · Montevideo', viewers: '248', tag: 'NUEVA COLECCIÓN', color: '#693d6e' },
@@ -24,6 +28,7 @@ export default function App() {
   const [micPermission, requestMicPermission] = useMicrophonePermissions();
   const [showCamera, setShowCamera] = useState(false);
   const [cameraFacing, setCameraFacing] = useState('front');
+  const [liveSession, setLiveSession] = useState(null);
   const visibleProducts = products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()));
 
   async function startCameraLive() {
@@ -35,7 +40,25 @@ export default function App() {
       const result = await requestMicPermission();
       if (!result.granted) return;
     }
-    setShowCamera(true);
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+    if (!apiUrl) {
+      setNotice('Falta configurar el servidor KD.LIVE. La vista de cámara no es una transmisión.');
+      return;
+    }
+    try {
+      const roomName = 'kdlive_' + Date.now();
+      const identity = 'seller_' + Date.now();
+      const response = await fetch(apiUrl.replace(/\\/$/, '') + '/api/live/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomName, identity, role: 'host' }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'No se pudo iniciar el LIVE.');
+      setLiveSession({ token: data.token, serverUrl: data.serverUrl, mode: 'host' });
+    } catch (error) {
+      setNotice(error.message || 'No se pudo conectar con el servidor.');
+    }
   }
 
   function comingSoon(label) {
@@ -48,8 +71,8 @@ export default function App() {
       <ExpoStatusBar style="light" />
       <StatusBar barStyle="light-content" backgroundColor="#101018" />
       <View style={styles.header}>
-        <View style={styles.brandMark}><Text style={styles.brandMarkText}>360</Text></View>
-        <Text style={styles.brand}>SOCIAL <Text style={styles.brandBold}>LIVE SHOP</Text></Text>
+        <View style={styles.brandMark}><Text style={styles.brandMarkText}>KD</Text></View>
+        <Text style={styles.brand}>KD.<Text style={styles.brandBold}>LIVE</Text></Text>
         <TouchableOpacity onPress={() => comingSoon('Perfil')} style={styles.avatar}><Text>👤</Text></TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={styles.content}>
@@ -75,7 +98,7 @@ export default function App() {
         </>}
         {tab === 'En vivo' && <>
           <Text style={styles.sectionTitle}>Transmisiones en vivo</Text>
-          <Text style={styles.notice}>Esta versión es una base de aplicación. El video en directo y el chat real se integrarán con un proveedor de streaming.</Text>
+          <Text style={styles.notice}>La transmisión real usa LiveKit. Requiere el servidor configurado y una compilación nativa; Expo Go no es compatible.</Text>
           {lives.map(live => <TouchableOpacity key={live.seller} onPress={() => setSelectedLive(live)} style={styles.secondaryButton}><Text style={styles.buttonText}>Ver demo · {live.seller}</Text></TouchableOpacity>)}
           <TouchableOpacity onPress={startCameraLive} style={styles.primaryButton}><Text style={styles.buttonText}>＋ Preparar mi LIVE</Text></TouchableOpacity>
         </>}
@@ -86,7 +109,7 @@ export default function App() {
           {visibleProducts.length === 0 && <Text style={styles.muted}>No encontramos productos con esa búsqueda.</Text>}
         </>}
         {!!notice && <Text style={styles.notice}>{notice}</Text>}
-        <Text style={styles.footer}>KD.LIVE · Prototipo inicial</Text>
+        <Text style={styles.footer}>KD.LIVE · Desarrollo en curso</Text>
       </ScrollView>
       <View style={styles.bottom}>
         {['Inicio', 'En vivo', '＋', 'Tienda', 'Perfil'].map(item => (
@@ -108,7 +131,7 @@ export default function App() {
           <Text style={styles.smallNote}>Video, chat y pagos reales aún no están conectados.</Text>
         </View>
       </View>}
-      {showCamera && <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, zIndex: 20, backgroundColor: '#000', padding: 14, paddingTop: 42 }}>
+      {liveSession && <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, zIndex: 30 }}><LiveSession {...liveSession} onClose={() => setLiveSession(null)} /></View>}\n      {showCamera && <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, zIndex: 20, backgroundColor: '#000', padding: 14, paddingTop: 42 }}>
         <CameraView style={{ flex: 1, borderRadius: 16, overflow: 'hidden' }} facing={cameraFacing} />
         <View style={{ position: 'absolute', top: 52, left: 24, right: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={{ color: '#fff', backgroundColor: '#d82e69', padding: 8, borderRadius: 8, fontWeight: '900' }}>● CÁMARA LISTA</Text>
