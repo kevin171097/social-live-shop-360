@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { SafeAreaView, View, Text, TouchableOpacity, ScrollView, TextInput, StatusBar } from 'react-native';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
-import { useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import { styles } from './src/styles';
 import { supabaseConfigured } from './src/supabase';
 import { registerGlobals } from '@livekit/react-native';
@@ -10,7 +9,7 @@ import LiveSession from './src/LiveSession';
 registerGlobals();
 
 const lives = [
-  { seller: 'Moda Urbana Uy · demo', category: 'Ropa · Ejemplo de tienda', viewers: 'VISTA PREVIA', tag: 'NUEVA COLECCIÓN', color: '#693d6e' },
+  { seller: 'Moda Urbana Uy · demo', category: 'Ropa · Ejemplo de tienda', viewers: 'SALA DEMO', tag: 'NUEVA COLECCIÓN', color: '#693d6e' },
   { seller: 'Street Kicks · demo', category: 'Calzado · Ejemplo de tienda', viewers: 'VISTA PREVIA', tag: 'SNEAKERS DROP', color: '#36445d' },
 ];
 const products = [
@@ -24,40 +23,11 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [selectedLive, setSelectedLive] = useState(null);
   const [notice, setNotice] = useState('');
-  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
-  const [micPermission, requestMicPermission] = useMicrophonePermissions();
   const [liveSession, setLiveSession] = useState(null);
   const visibleProducts = products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()));
 
-  async function startCameraLive() {
-    if (!cameraPermission?.granted) {
-      const result = await requestCameraPermission();
-      if (!result.granted) return;
-    }
-    if (!micPermission?.granted) {
-      const result = await requestMicPermission();
-      if (!result.granted) return;
-    }
-    const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-    if (!apiUrl) {
-      setNotice('Falta configurar el servidor KD.LIVE. La vista de cámara no es una transmisión.');
-      return;
-    }
-    try {
-      const baseUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
-      const roomName = 'kdlive_' + Date.now();
-      const identity = 'seller_' + Date.now();
-      const response = await fetch(baseUrl + '/api/live/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomName, identity, role: 'host' }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'No se pudo iniciar el LIVE.');
-      setLiveSession({ token: data.token, serverUrl: data.serverUrl, mode: 'host' });
-    } catch (error) {
-      setNotice(error.message || 'No se pudo conectar con el servidor.');
-    }
+  function startCameraLive() {
+    setNotice('El inicio de LIVE se habilitará cuando conectemos tu cuenta y creemos una sala autorizada. Así evitamos transmisiones falsas o accesos inseguros.');
   }
 
   function comingSoon(label) {
@@ -88,11 +58,12 @@ export default function App() {
           <View style={styles.sectionHead}><Text style={styles.sectionTitle}>Descubrí creadores</Text><Text style={styles.muted}>Salas de muestra</Text></View>
           {lives.map(live => (
             <TouchableOpacity key={live.seller} onPress={() => setSelectedLive(live)} style={[styles.liveCard, { backgroundColor: live.color }]}>
-              <Text style={styles.livePill}>● DEMOSTRACIÓN</Text><Text style={styles.viewers}>👁 {live.viewers}</Text>
+              <Text style={styles.livePill}>● DEMOSTRACIÓN</Text><Text style={styles.viewers}>{live.viewers}</Text>
               <Text style={styles.liveArtwork}>{live.tag}</Text><Text style={styles.seller}>{live.seller}</Text><Text style={styles.muted}>{live.category}</Text>
             </TouchableOpacity>
           ))}
           <View style={styles.sectionHead}><Text style={styles.sectionTitle}>Para descubrir</Text><Text style={styles.muted}>Productos</Text></View>
+          <Text style={styles.muted}>Productos de muestra · precios ilustrativos</Text>
           {products.map(p => <Product key={p.name} product={p} onPress={() => comingSoon('Compra')} />)}
         </>}
         {tab === 'En vivo' && <>
@@ -103,7 +74,9 @@ export default function App() {
         </>}
         {tab === 'Tienda' && <>
           <Text style={styles.sectionTitle}>Tienda</Text>
+          <Text style={styles.muted}>Catálogo de ejemplo · precios ilustrativos</Text>
           <TextInput value={query} onChangeText={setQuery} placeholder="Buscar ropa, calzado..." placeholderTextColor="#9999aa" style={styles.search} />
+          <Text style={styles.muted}>Productos de muestra · precios ilustrativos</Text>
           {visibleProducts.map(p => <Product key={p.name} product={p} onPress={() => comingSoon('Compra')} />)}
           {visibleProducts.length === 0 && <Text style={styles.muted}>No encontramos productos con esa búsqueda.</Text>}
         </>}
