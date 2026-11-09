@@ -48,7 +48,7 @@ export default function App() {
     try {
       const roomName = 'kdlive_' + Date.now();
       const identity = 'seller_' + Date.now();
-      const response = await fetch(apiUrl.replace(/\\/$/, '') + '/api/live/token', {
+      const response = await fetch(apiUrl + '/api/live/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ roomName, identity, role: 'host' }),
@@ -123,7 +123,7 @@ export default function App() {
         <View style={styles.modal}>
           <View style={styles.modalHead}><Text style={styles.modalTitle}>LIVE · DEMOSTRACIÓN</Text><TouchableOpacity onPress={() => setSelectedLive(null)}><Text style={styles.close}>✕</Text></TouchableOpacity></View>
           <View style={[styles.videoPlaceholder, { backgroundColor: selectedLive.color }]}>
-            <Text style={styles.videoTitle}>SOCIAL LIVE{"\n"}<Text style={styles.videoStrong}>SHOP 360</Text></Text>
+            <Text style={styles.videoTitle}>KD.LIVE{"\n"}<Text style={styles.videoStrong}>SHOP 360</Text></Text>
             <Text style={styles.videoCaption}>Acá aparecerá la transmisión real del vendedor.</Text>
           </View>
           <Text style={styles.seller}>{selectedLive.seller}</Text><Text style={styles.muted}>Preguntá por talles, colores y envíos.</Text>
