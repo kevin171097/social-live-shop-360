@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { SafeAreaView, View, Text, TouchableOpacity, ScrollView, TextInput, StatusBar, ActivityIndicator, Alert } from 'react-native';
+import { SafeAreaView, View, Text, Image, TouchableOpacity, ScrollView, TextInput, StatusBar, ActivityIndicator, Alert } from 'react-native';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { styles } from './src/styles';
 import { supabase, supabaseConfigured } from './src/supabase';
@@ -290,9 +290,19 @@ export default function App() {
 }
 
 function Product({ product, onPress }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = !!product.image_url && !imageFailed;
   return <TouchableOpacity style={styles.product} onPress={onPress}>
-    <View style={[styles.productArt, { backgroundColor: product.color || '#59466d' }]}><Text style={styles.productEmoji}>{product.emoji || '🛍️'}</Text></View>
-    <View style={styles.productInfo}><Text style={styles.productName}>{product.name}</Text><Text style={styles.productPrice}>{product.price}</Text></View>
+    <View style={[styles.productArt, { backgroundColor: product.color || '#59466d', overflow: 'hidden' }]}>
+      {showImage ? (
+        <Image source={{ uri: product.image_url }} style={{ width: '100%', height: '100%' }} resizeMode="cover" onError={() => setImageFailed(true)} />
+      ) : <Text style={styles.productEmoji}>{product.emoji || '🛍️'}</Text>}
+    </View>
+    <View style={styles.productInfo}>
+      <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>
+      <Text style={styles.productPrice}>{product.price}</Text>
+      {Number.isFinite(Number(product.stock)) && <Text style={styles.muted}>{Number(product.stock) > 0 ? 'Disponible' : 'Sin stock'}</Text>}
+    </View>
     <Text style={styles.chevron}>›</Text>
   </TouchableOpacity>;
 }
