@@ -16,3 +16,5 @@ services:
         sync: false
       - key: ALLOWED_ORIGIN
         value: "*"
+      - key: ALLOW_DEV_TOKENS
+        value: "false"
