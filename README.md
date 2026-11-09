@@ -1,36 +1,42 @@
-# KD.LIVE — base de desarrollo
+# KD.LIVE — desarrollo móvil y streaming
 
-Aplicación social original para Android/iOS basada en Expo + React Native. Esta rama conserva el prototipo anterior y prepara el backend de transmisiones reales con LiveKit.
+Aplicación social original para Android/iOS con Expo, React Native y LiveKit.
 
-## Estado actual (transparente)
-- Interfaz móvil inicial con Inicio, En vivo y Tienda, búsqueda local y vista previa de cámara.
-- Esquema inicial de datos Supabase para perfiles, productos, lives, pedidos y reportes.
-- Backend Node/Express para emitir tokens LiveKit desde el servidor.
-- **Todavía no es una app terminada ni un APK instalable.** La vista previa de cámara no transmite por Internet; el cliente móvil aún debe integrarse con LiveKit y probarse en dispositivos reales.
-- Aún faltan autenticación, chat persistente, feed de videos, notificaciones, compras/pagos, moderación operativa, panel de administración, pruebas y publicación.
+## Estado actual
+- Interfaz inicial con Inicio, En vivo y Tienda.
+- Vista de sala LiveKit integrada en el código móvil.
+- Acción de anfitrión que solicita un token al backend y abre una sala LiveKit.
+- Backend Node/Express que genera tokens temporales.
+- Configuración Expo para módulos nativos WebRTC y perfil EAS de Android.
+- **Aún no es una aplicación terminada ni un APK probado.** No se ha compilado ni probado en un teléfono real y el backend aún no está desplegado con credenciales privadas.
 
-## App móvil
-Requiere Node.js y un entorno Expo con build nativo para los módulos de streaming. Expo Go por sí solo no alcanza para integrar LiveKit React Native.
+## Requisito importante
+LiveKit React Native necesita código nativo. **Expo Go no es compatible**. Se debe generar un development build o preview build con EAS y probar en Android físico. Referencia: https://docs.livekit.io/transport/sdk-platforms/expo/
 
-```bash
-npm install
-npx expo start
-```
+## Configurar el backend en Render
+El archivo `render.yaml` describe el servicio. Al crearlo, seleccionar la rama `kd-live` y configurar estas variables privadas en Render:
+- `LIVEKIT_URL`: URL wss del proyecto LiveKit.
+- `LIVEKIT_API_KEY`: API Key regenerada.
+- `LIVEKIT_API_SECRET`: API Secret regenerada.
 
-Para streaming nativo se deberá configurar un build de desarrollo/preview con EAS Build y añadir el SDK cliente LiveKit compatible con Expo SDK usado por este proyecto.
+No escribir secretos en GitHub, en el código de la app ni en el chat. El endpoint actual de emisión de tokens es una etapa de desarrollo: **no debe publicarse para usuarios reales hasta añadir autenticación y autorización de vendedores con Supabase**, límites de uso y protección antiabuso.
 
-## Backend LiveKit (Render)
-1. Crear un Web Service en Render apuntando a esta rama.
-2. Root Directory: `server`.
-3. Build Command: `npm install`.
-4. Start Command: `npm start`.
-5. Configurar en Render, como variables privadas: `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` y opcionalmente `ALLOWED_ORIGIN`.
-6. No guardar claves privadas en GitHub ni enviarlas por chat. Si una clave fue compartida, rotarla en LiveKit.
+Cuando Render entregue una URL HTTPS, configurar `EXPO_PUBLIC_API_URL` con esa URL sin barra final en el entorno de compilación móvil.
 
-El endpoint `POST /api/live/token` emite un token temporal de acceso a una sala. Esta primera versión es solo un backend de desarrollo: antes de producción se debe exigir autenticación de usuario, validar permisos de anfitrión/espectador, limitar salas y aplicar rate limits.
+## Compilar Android
+1. Instalar dependencias con `npm install`.
+2. Instalar EAS CLI e iniciar sesión con una cuenta Expo.
+3. Ejecutar `eas build --platform android --profile preview`.
+4. Instalar el APK generado y probar cámara, micrófono y conexión desde dos dispositivos.
 
-## Base de datos
-El esquema inicial se encuentra en `supabase/schema.sql`. Revisar las políticas RLS y completar pruebas antes de usar datos reales.
+El primer build debe revisarse por compatibilidad de dependencias y configuración nativa. No se afirma que ya esté compilado.
 
-## Seguridad y moderación
-No se puede garantizar que una transmisión nunca reciba reportes. KD.LIVE debe contar con reglas claras, controles antiabuso, revisión humana, evidencia, sanciones proporcionales y apelaciones.
+## Pendiente antes de producción
+- Autenticación de usuarios y roles con Supabase.
+- Emisión de tokens protegida por identidad autenticada y permisos del vendedor.
+- Crear/cerrar sesiones LIVE en base de datos.
+- Descubrimiento de transmisiones reales, chat en vivo, comentarios, likes y contador de espectadores.
+- Feed de videos, perfiles, seguimiento y notificaciones.
+- Catálogo con carga de imágenes, pedidos y pagos.
+- Moderación, reportes, revisión humana y apelaciones.
+- Pruebas de seguridad, privacidad, rendimiento y publicación.
