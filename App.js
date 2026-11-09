@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { SafeAreaView, View, Text, TouchableOpacity, ScrollView, TextInput, StatusBar } from 'react-native';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
-import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
+import { useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import { styles } from './src/styles';
 import { supabaseConfigured } from './src/supabase';
 import { registerGlobals } from '@livekit/react-native';
@@ -10,8 +10,8 @@ import LiveSession from './src/LiveSession';
 registerGlobals();
 
 const lives = [
-  { seller: 'Moda Urbana Uy', category: 'Ropa · Montevideo', viewers: '248', tag: 'NUEVA COLECCIÓN', color: '#693d6e' },
-  { seller: 'Street Kicks', category: 'Calzado', viewers: '96', tag: 'SNEAKERS DROP', color: '#36445d' },
+  { seller: 'Moda Urbana Uy · demo', category: 'Ropa · Ejemplo de tienda', viewers: 'VISTA PREVIA', tag: 'NUEVA COLECCIÓN', color: '#693d6e' },
+  { seller: 'Street Kicks · demo', category: 'Calzado · Ejemplo de tienda', viewers: 'VISTA PREVIA', tag: 'SNEAKERS DROP', color: '#36445d' },
 ];
 const products = [
   { name: 'Campera urbana', price: '$ 1.490', emoji: '🧥', color: '#59466d' },
@@ -26,8 +26,6 @@ export default function App() {
   const [notice, setNotice] = useState('');
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [micPermission, requestMicPermission] = useMicrophonePermissions();
-  const [showCamera, setShowCamera] = useState(false);
-  const [cameraFacing, setCameraFacing] = useState('front');
   const [liveSession, setLiveSession] = useState(null);
   const visibleProducts = products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()));
 
@@ -87,10 +85,10 @@ export default function App() {
           ))}
         </View>
         {tab === 'Inicio' && <>
-          <View style={styles.sectionHead}><Text style={styles.sectionTitle}>En vivo ahora</Text><Text style={styles.muted}>Descubrí vendedores</Text></View>
+          <View style={styles.sectionHead}><Text style={styles.sectionTitle}>Descubrí creadores</Text><Text style={styles.muted}>Salas de muestra</Text></View>
           {lives.map(live => (
             <TouchableOpacity key={live.seller} onPress={() => setSelectedLive(live)} style={[styles.liveCard, { backgroundColor: live.color }]}>
-              <Text style={styles.livePill}>● EN VIVO</Text><Text style={styles.viewers}>👁 {live.viewers}</Text>
+              <Text style={styles.livePill}>● DEMOSTRACIÓN</Text><Text style={styles.viewers}>👁 {live.viewers}</Text>
               <Text style={styles.liveArtwork}>{live.tag}</Text><Text style={styles.seller}>{live.seller}</Text><Text style={styles.muted}>{live.category}</Text>
             </TouchableOpacity>
           ))}
@@ -98,13 +96,13 @@ export default function App() {
           {products.map(p => <Product key={p.name} product={p} onPress={() => comingSoon('Compra')} />)}
         </>}
         {tab === 'En vivo' && <>
-          <Text style={styles.sectionTitle}>Transmisiones en vivo</Text>
-          <Text style={styles.notice}>La transmisión real usa LiveKit. Requiere el servidor configurado y una compilación nativa; Expo Go no es compatible.</Text>
-          {lives.map(live => <TouchableOpacity key={live.seller} onPress={() => setSelectedLive(live)} style={styles.secondaryButton}><Text style={styles.buttonText}>Ver demo · {live.seller}</Text></TouchableOpacity>)}
+          <Text style={styles.sectionTitle}>Explorá transmisiones</Text>
+          <Text style={styles.notice}>Las salas de esta pantalla son ejemplos visuales. Los LIVE reales se habilitarán al conectar tu cuenta, el servidor y compilar la app nativa.</Text>
+          {lives.map(live => <TouchableOpacity key={live.seller} onPress={() => setSelectedLive(live)} style={styles.secondaryButton}><Text style={styles.buttonText}>Vista previa · {live.seller}</Text></TouchableOpacity>)}
           <TouchableOpacity onPress={startCameraLive} style={styles.primaryButton}><Text style={styles.buttonText}>＋ Preparar mi LIVE</Text></TouchableOpacity>
         </>}
         {tab === 'Tienda' && <>
-          <Text style={styles.sectionTitle}>Marketplace</Text>
+          <Text style={styles.sectionTitle}>Tienda</Text>
           <TextInput value={query} onChangeText={setQuery} placeholder="Buscar ropa, calzado..." placeholderTextColor="#9999aa" style={styles.search} />
           {visibleProducts.map(p => <Product key={p.name} product={p} onPress={() => comingSoon('Compra')} />)}
           {visibleProducts.length === 0 && <Text style={styles.muted}>No encontramos productos con esa búsqueda.</Text>}
@@ -133,21 +131,6 @@ export default function App() {
         </View>
       </View>}
       {liveSession && <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, zIndex: 30 }}><LiveSession {...liveSession} onClose={() => setLiveSession(null)} /></View>}
-      {showCamera && <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, zIndex: 20, backgroundColor: '#000', padding: 14, paddingTop: 42 }}>
-        <CameraView style={{ flex: 1, borderRadius: 16, overflow: 'hidden' }} facing={cameraFacing} />
-        <View style={{ position: 'absolute', top: 52, left: 24, right: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={{ color: '#fff', backgroundColor: '#d82e69', padding: 8, borderRadius: 8, fontWeight: '900' }}>● CÁMARA LISTA</Text>
-          <TouchableOpacity onPress={() => setCameraFacing(value => value === 'front' ? 'back' : 'front')} style={{ backgroundColor: '#222', padding: 10, borderRadius: 10 }}>
-            <Text style={{ color: '#fff', fontWeight: '700' }}>Girar cámara</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={{ paddingVertical: 18 }}>
-          <Text style={{ color: '#fff', textAlign: 'center', marginBottom: 12 }}>Vista previa en este teléfono. Aún no se transmite a espectadores.</Text>
-          <TouchableOpacity onPress={() => setShowCamera(false)} style={{ backgroundColor: '#d82e69', padding: 16, borderRadius: 12, alignItems: 'center' }}>
-            <Text style={{ color: '#fff', fontWeight: '900' }}>CERRAR CÁMARA</Text>
-          </TouchableOpacity>
-        </View>
-      </View>}
       <Text style={styles.connection}>{supabaseConfigured ? 'Base de datos configurada' : 'Modo demostración · Base de datos pendiente'}</Text>
     </SafeAreaView>
   );
