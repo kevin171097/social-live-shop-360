@@ -4,8 +4,8 @@ const ink = '#090910';
 const panel = '#151520';
 const line = '#292938';
 const muted = '#9B9BAF';
-const pink = '#FF397F';
-const violet = '#A78BFA';
+const pink = '#FF3048';
+const violet = '#FF6675';
 
 export const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: ink },
@@ -18,7 +18,7 @@ export const styles = StyleSheet.create({
   content: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 118 },
   eyebrow: { color: violet, fontSize: 10, fontWeight: '900', letterSpacing: 2.1, marginTop: 12 },
   hero: { fontSize: 39, lineHeight: 43, fontWeight: '900', letterSpacing: -1.7, color: '#fff', marginTop: 9, marginBottom: 19 },
-  heroAccent: { color: '#FF75A8' },
+  heroAccent: { color: '#FF5264' },
   tabs: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: line, marginBottom: 20 },
   tab: { paddingVertical: 12, paddingHorizontal: 16, marginRight: 5 },
   activeTab: { borderBottomWidth: 2, borderBottomColor: pink },
@@ -28,7 +28,7 @@ export const styles = StyleSheet.create({
   sectionTitle: { color: '#fff', fontWeight: '900', fontSize: 19, letterSpacing: -0.4 },
   muted: { color: muted, fontSize: 12 },
   liveCard: { height: 178, borderRadius: 19, padding: 15, marginBottom: 13, justifyContent: 'flex-end', overflow: 'hidden', borderWidth: 1, borderColor: '#ffffff18', ...Platform.select({ ios: { shadowColor: '#000', shadowOpacity: 0.28, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } }, android: { elevation: 4 } }) },
-  livePill: { position: 'absolute', top: 13, left: 13, color: '#fff', backgroundColor: '#E52F70', overflow: 'hidden', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20, fontSize: 10, fontWeight: '900', letterSpacing: 0.5 },
+  livePill: { position: 'absolute', top: 13, left: 13, color: '#fff', backgroundColor: '#E3263A', overflow: 'hidden', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20, fontSize: 10, fontWeight: '900', letterSpacing: 0.5 },
   viewers: { position: 'absolute', top: 13, right: 13, color: '#fff', fontSize: 11, backgroundColor: '#09091099', paddingHorizontal: 9, paddingVertical: 7, borderRadius: 20, overflow: 'hidden' },
   liveArtwork: { color: '#fff', fontSize: 26, fontWeight: '900', letterSpacing: 0.8 },
   seller: { color: '#fff', fontWeight: '800', fontSize: 14, marginTop: 7 },
@@ -37,7 +37,7 @@ export const styles = StyleSheet.create({
   productEmoji: { fontSize: 32 },
   productInfo: { flex: 1 },
   productName: { color: '#fff', fontWeight: '750' },
-  productPrice: { color: '#FF83B0', fontWeight: '900', marginTop: 5, fontSize: 14 },
+  productPrice: { color: '#FF5264', fontWeight: '900', marginTop: 5, fontSize: 14 },
   chevron: { fontSize: 25, color: '#77778B', paddingHorizontal: 5 },
   bottom: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 76, paddingBottom: Platform.OS === 'ios' ? 12 : 4, backgroundColor: '#11111A', borderTopWidth: 1, borderTopColor: line, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
   bottomItem: { alignItems: 'center', minWidth: 56, paddingTop: 4 },
