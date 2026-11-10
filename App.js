@@ -16,6 +16,7 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [tab, setTab] = useState('Inicio');
+  const [feedMode, setFeedMode] = useState('Para ti');
   const [query, setQuery] = useState('');
   const [products, setProducts] = useState([]);
   const [lives, setLives] = useState([]);
@@ -285,14 +286,53 @@ export default function App() {
         </View>
         {busy && <ActivityIndicator color="#FF397F" style={{ margin: 12 }} />}
         {tab === 'Inicio' && <>
-          <View style={styles.sectionHead}><Text style={styles.sectionTitle}>Creadores en vivo</Text><Text style={styles.muted}>{lives.length} activos</Text></View>
-          {lives.length ? lives.map(item => <TouchableOpacity key={item.id} onPress={() => enterLive(item, 'viewer')} style={[styles.liveCard, { backgroundColor: '#693d6e' }]}>
-            <Text style={styles.livePill}>● EN DIRECTO</Text><Text style={styles.liveArtwork}>KD.LIVE</Text>
-            <Text style={styles.seller}>{item.title}</Text><Text style={styles.muted}>{item.profiles?.display_name || 'Vendedor'}</Text>
-          </TouchableOpacity>) : <Text style={styles.notice}>{demoMode ? 'Configuración pendiente: conectaremos las salas reales.' : 'Todavía no hay transmisiones activas. ¡Podés ser de los primeros!'}</Text>}
-          <View style={styles.sectionHead}><Text style={styles.sectionTitle}>Productos</Text><Text style={styles.muted}>{products.filter(p => p.status === 'active').length} publicados</Text></View>
-          {products.filter(p => p.status === 'active').slice(0, 8).map(p => <Product key={p.id} product={p} onPress={() => setSelectedProduct(p)} />)}
-          {!products.length && <Text style={styles.muted}>Todavía no hay productos publicados.</Text>}
+          <View style={styles.feedTop}>
+            <Text style={styles.feedHeading}>Descubrí</Text>
+            <View style={styles.feedModes}>
+              {['Siguiendo', 'Para ti'].map(mode => (
+                <TouchableOpacity key={mode} onPress={() => setFeedMode(mode)} style={[styles.feedMode, feedMode === mode && styles.feedModeActive]}>
+                  <Text style={[styles.feedModeText, feedMode === mode && styles.feedModeTextActive]}>{mode}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+          {lives.length > 0 ? lives.map(item => (
+            <TouchableOpacity key={item.id} activeOpacity={0.92} onPress={() => enterLive(item, 'viewer')} style={styles.reelCard}>
+              <View style={styles.reelArtwork}>
+                <View style={styles.reelGlow} />
+                <Text style={styles.reelBrand}>KD.LIVE</Text>
+                <Text style={styles.reelLiveLabel}>● EN DIRECTO</Text>
+                <Text style={styles.reelTitle}>{item.title}</Text>
+                <Text style={styles.reelSubtitle}>{item.profiles?.display_name || 'Creador de KD.LIVE'}</Text>
+                <Text style={styles.reelPlay}>▶</Text>
+              </View>
+              <View style={styles.reelActions}>
+                <View style={styles.reelAvatar}><Text style={styles.reelAvatarText}>KD</Text></View>
+                <Text style={styles.reelActionIcon}>♥</Text><Text style={styles.reelActionLabel}>LIVE</Text>
+                <Text style={styles.reelActionIcon}>▢</Text><Text style={styles.reelActionLabel}>Ver</Text>
+                <Text style={styles.reelActionIcon}>↗</Text><Text style={styles.reelActionLabel}>Compartir</Text>
+              </View>
+              <View style={styles.reelCaption}>
+                <Text style={styles.reelCreator}>@{item.profiles?.username || 'creador'} · EN VIVO</Text>
+                <Text style={styles.reelDescription}>{item.title} · Tocá para entrar a la transmisión</Text>
+              </View>
+            </TouchableOpacity>
+          )) : (
+            <View style={styles.emptyReel}>
+              <View style={styles.emptyReelMark}><Text style={styles.emptyReelMarkText}>KD</Text></View>
+              <Text style={styles.emptyReelTitle}>Tu próximo descubrimiento empieza acá</Text>
+              <Text style={styles.emptyReelText}>Cuando haya creadores transmitiendo, vas a poder entrar directamente desde este feed.</Text>
+              <TouchableOpacity onPress={() => setTab('En vivo')} style={styles.emptyReelButton}><Text style={styles.buttonText}>Explorar LIVE</Text></TouchableOpacity>
+            </View>
+          )}
+          <View style={styles.feedSectionHead}>
+            <Text style={styles.sectionTitle}>También te puede interesar</Text>
+            <Text style={styles.muted}>{products.filter(p => p.status === 'active').length} productos</Text>
+          </View>
+          {products.filter(p => p.status === 'active').slice(0, 8).map(p => (
+            <Product key={p.id} product={p} onPress={() => setSelectedProduct(p)} />
+          ))}
+          {!products.filter(p => p.status === 'active').length && <Text style={styles.muted}>Los productos de la comunidad aparecerán acá.</Text>}
         </>}
         {tab === 'En vivo' && <>
           <Text style={styles.sectionTitle}>Transmisiones activas</Text>
