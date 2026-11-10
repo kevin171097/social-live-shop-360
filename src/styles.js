@@ -60,7 +60,7 @@ export const styles = StyleSheet.create({
   videoStrong: { fontWeight: '900' },
   videoCaption: { color: '#F1EAF3', fontSize: 12, marginTop: 20, textAlign: 'center', lineHeight: 18 },
   smallNote: { color: '#88889A', fontSize: 10, marginTop: 11, textAlign: 'center' },
-  connection: { position: 'absolute', top: 71, right: 10, color: '#77778A', fontSize: 8 }
+  connection: { position: 'absolute', top: 71, right: 10, color: '#77778A', fontSize: 8 },
 
   feedTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 5, marginBottom: 14 },
   feedHeading: { color: '#fff', fontSize: 25, fontWeight: '900', letterSpacing: -0.7 },
