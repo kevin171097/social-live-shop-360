@@ -25,6 +25,7 @@
     "expo-image-picker": "~17.0.10"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.2"
+    "@babel/core": "^7.25.2",
+    "babel-preset-expo": "^54.0.0"
   }
 }
